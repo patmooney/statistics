@@ -4,6 +4,7 @@ import "errors";
 import "math";
 
 /*
+    https://www.leeds.ac.uk/educol/documents/00003759.htm
     https://mathlesstraveled.com/appendices/sigma-notation/
 
     σ  - Sigma, Standard Deviation of Population
@@ -34,12 +35,13 @@ import "math";
     you the squared absolute difference per sample.
 
     Dividing the sum of squared differences by the population** gives you the variance.
-    Square the variance to get the standard deviation.
+    Root the variance to get the standard deviation.
 
     ** If using a data sample ( subset of population ) devide the squared difference by
     Sample Size ( N ) - 1
 */
 
+// StandardDeviation is an expression of variety over a set of data points
 func StandardDeviation( sample []float64, isSample bool )( float64, error ) {
     if len(sample) == 0 {
         return math.NaN(), errors.New("Sample is empty");
