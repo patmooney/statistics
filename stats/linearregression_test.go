@@ -30,10 +30,10 @@ func TestCalculateRegressionLine ( t *testing.T ) {
 func TestLinearRegressionExtrapolationX ( t *testing.T ) {
     //for _, x := range([][]float64{ {14, -180.6083}, {73,181.5091}, {100,347.2238} }){
     for _, x := range(data){
-        out, CI, se, _ := stats.LinearRegressionExtrapolation( data, x[0] );
+        out, rStats, _ := stats.LinearRegressionExtrapolation( data, x[0] );
         if stats.Round(out,0.5,4) != x[1] {
             t.Fail();
         }
-        t.Logf( "Y prediction at X %.4f: %.4f ± %.4f (.95 CI) SE: %.4f", x, out, CI, se );
+        t.Logf("ŷ = %.4f | y = %.4f | x = %.4f | CI .95 = %.4f | SE = %.4f | Slope CI .95 = %.4f", out, x[1], x[0], rStats.ConfidenceInterval(), rStats.StandardError(), rStats.SlopeConfidenceInterval() );
     }
 }

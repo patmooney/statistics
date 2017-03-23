@@ -4,23 +4,23 @@ import "math";
 import "errors";
 
 // LinearRegressionExtrapolation given some data and a x value, return the predicted y value
-func LinearRegressionExtrapolation( data [][]float64, x float64 )( float64, float64, float64, error ){
+func LinearRegressionExtrapolation( data [][]float64, x float64 )( float64, regressionstats, error ){
     slope, intercept, err := CalculateRegressionLine( data );
     if err != nil {
-        return math.NaN(), math.NaN(), math.NaN(), err;
+        return math.NaN(), regressionstats{}, err;
     }
 
     prediction, err := LinearExtrapolation( slope, intercept, x );
     if err != nil {
-        return math.NaN(), math.NaN(), math.NaN(), err;
+        return math.NaN(), regressionstats{}, err;
     }
 
-    CI, se, err := CalculateConfidenceInterval( data, slope, intercept );
+    rStats, _ := CalculateConfidenceInterval( data, slope, intercept );
 
-    return prediction, CI, se, nil;
+    return prediction, rStats, nil;
 }
 
-func CalculateConfidenceInterval( data [][]float64, slope float64, intercept float64 ) ( float64, float64, error ) {
+func CalculateConfidenceInterval( data [][]float64, slope float64, intercept float64 ) ( regressionstats, error ) {
 
     // Standard Error of Slope
     // SE = sb1 = sqrt [ Σ(yi - ŷi)2 / (n - 2) ] / sqrt [ Σ(xi - x)2 ]
@@ -45,10 +45,11 @@ func CalculateConfidenceInterval( data [][]float64, slope float64, intercept flo
     sX := math.Pow( summationOfVarianceX, 0.5 );
     se := sY / sX // standard error
 
-    tValue     := 2.262;
+    tValue     := 2.228;
     CI         := tValue * ( sY / math.Pow( float64(len(data)), 0.5 ) );
+    SCI        := tValue * se;
 
-    return CI, se, nil;
+    return regressionstats{ CI, SCI, se, slope, intercept }, nil;
 }
 
 // CalculateRegressionLine calculate line of best fit from given data
