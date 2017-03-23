@@ -4,36 +4,51 @@ import "math";
 import "errors";
 
 // LinearRegressionExtrapolation given some data and a x value, return the predicted y value
-func LinearRegressionExtrapolation( data [][]float64, x float64 )( float64, float64, error ){
+func LinearRegressionExtrapolation( data [][]float64, x float64 )( float64, float64, float64, error ){
     slope, intercept, err := CalculateRegressionLine( data );
     if err != nil {
-        return math.NaN(), math.NaN(), err;
+        return math.NaN(), math.NaN(), math.NaN(), err;
     }
 
     prediction, err := LinearExtrapolation( slope, intercept, x );
     if err != nil {
-        return math.NaN(), math.NaN(), err;
+        return math.NaN(), math.NaN(), math.NaN(), err;
     }
 
-    CI, err := CalculateConfidenceInterval( data, slope, intercept );
+    CI, se, err := CalculateConfidenceInterval( data, slope, intercept );
 
-    return prediction, CI, nil;
+    return prediction, CI, se, nil;
 }
 
-func CalculateConfidenceInterval( data [][]float64, slope float64, intercept float64 ) ( float64, error ) {
+func CalculateConfidenceInterval( data [][]float64, slope float64, intercept float64 ) ( float64, float64, error ) {
 
-    var summationOfVariance float64;
+    // Standard Error of Slope
+    // SE = sb1 = sqrt [ Σ(yi - ŷi)2 / (n - 2) ] / sqrt [ Σ(xi - x)2 ]
+
+    var summationOfVarianceY,
+        summationOfVarianceX,
+        summationOfX,
+        meanX float64;
+
+    for _, d := range( data ) {
+        summationOfX += d[0];
+    }
+    meanX = summationOfX / float64(len(data));
 
     for _, d := range( data ) {
         X_, _ := LinearExtrapolation( slope, intercept, d[0] );
-        summationOfVariance += math.Pow( d[1] - X_, 2 );
+        summationOfVarianceY += math.Pow( d[1] - X_, 2 );
+        summationOfVarianceX += math.Pow( d[0] - meanX, 2 );
     }
-    s := math.Pow( summationOfVariance / float64( len(data) - 1 ), 0.5 );
 
-    tValue     := 1.960;
-    CI         := tValue * ( s / math.Pow( float64(len(data)), 0.5 ) );
+    sY := math.Pow( summationOfVarianceY / float64( len(data) - 2 ), 0.5 ); // standard deviation
+    sX := math.Pow( summationOfVarianceX, 0.5 );
+    se := sY / sX // standard error
 
-    return CI, nil;
+    tValue     := 2.262;
+    CI         := tValue * ( sY / math.Pow( float64(len(data)), 0.5 ) );
+
+    return CI, se, nil;
 }
 
 // CalculateRegressionLine calculate line of best fit from given data
